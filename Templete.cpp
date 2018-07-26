@@ -16,7 +16,7 @@
 //////////////////////////////
 // declear functions
 //////////////////////////////
-const void Usage();
+const void Usage(char * argv[]);
 const void GetOptions(int _rgc, char * argv[], char ** e);
 
 //////////////////////////////
@@ -36,7 +36,7 @@ int main(int argc, char * argv[]){
 //////////////////////////////
 const void Usage(char * argv[]){
   using namespace std;
-  cerr << "Usage: " << argv[0] << "<OPTION> " << "<ARGUMENT>" << endl;
+  cerr << "Usage: " << argv[0] << " <OPTION> " << "<ARGUMENT>" << endl;
   cerr << "-----Options-----" << endl;
   cerr << "-a :option a" << endl;
   cerr << "-b :option b" << endl;
@@ -54,22 +54,22 @@ const void GetOptions(int argc, char * argv[], char ** e){
   while((result=getopt(argc,argv,"abcde:"))!=-1){
     switch(result){
     case 'a':
-      Usage(argv)
+      Usage(argv);
       break;
     case 'b':
-      Usage(argv)
+      Usage(argv);
       break;
     case 'c':
-      Usage(argv)
+      Usage(argv);
       break;
     case 'd':
-      Usage(argv)
+      Usage(argv);
       break;
     case 'e':
-      e = optarg;
+      e = &optarg;
       break;
     default:
-      Usage();
+      Usage(argv);
       break;
     }
   }

@@ -12,36 +12,44 @@
 //////////////////////////////
 #include<iostream>
 #include<unistd.h> //for getopt()
+#include"TApplication.h"
 #include"TFile.h"
 #include"TTree.h"
-
+#include"TGraph.h"
+#include"TCanvas.h"
 
 //////////////////////////////
 // declear functions
 //////////////////////////////
 const void Usage(char * argv[]);
-const void GetOptions(int _rgc, char * argv[], char ** opt1, char ** opt2);
+const void GetOptions(int argc, char * argv[], char ** opt1, char ** opt2, char ** opt3,char ** opt4);
 
 //////////////////////////////
 // main
 //////////////////////////////
 int main(int argc, char * argv[]){
   using namespace std;
+  TApplication app("app",&argc,argv);
   const int kNumCell = 1024;
   char * in_filename;
   char * in_treename;
+  char * out_filename;
+  char * eve_num;
   //////////////////////////////
   // get options
   //////////////////////////////
-  GetOptions(argc,argv,&in_filename,&in_treename);
+  GetOptions(app.Argc(),app.Argv(),&in_filename,&in_treename,&out_filename,&eve_num);
   //////////////////////////////
   // open TFile
   //////////////////////////////
-  TFile * in_file = new TFile(in_filename,"READ");
+  TFile * in_file;
+  cout << in_filename << endl;
+  in_file = new TFile(in_filename,"READ");
   //////////////////////////////
   // read TTree
   //////////////////////////////
-  TTree * in_tree = new TTree();
+  TTree * in_tree;
+  cout << in_treename << endl;
   in_tree = dynamic_cast<TTree *>(in_file->Get(in_treename));
   //////////////////////////////
   // prepare arrays
@@ -52,16 +60,26 @@ int main(int argc, char * argv[]){
   in_tree->SetBranchAddress("time",time);
   in_tree->SetBranchAddress("wform0",wform0);
   in_tree->SetBranchAddress("wform1",wform1);
+  TGraph * graph = new TGraph();
   //////////////////////////////
   // test loop
   //////////////////////////////
-  const int kNumEvent = in_tree->GetEnties();
-  for(int  i_event = 0;i_event<kNumEvent;i_event++){
-    in_tree->GetEntries();
+  const int kNumEve = atoi(eve_num);
+  const int kNumEvent = in_tree->GetEntries();
+  for(int  i_event = kNumEve;i_event<kNumEve+1;i_event++){
+    in_tree->GetEntry(i_event);
     for(int i_cell = 0;i_cell<kNumCell;i_cell++){
-      cout << time[i_cell] <<", " << wform1[i_cell]-wform0[i_cell] << endl;
+      int num_p = graph->GetN();
+      graph->SetPoint(num_p,time[i_cell],wform1[i_cell]-wform0[i_cell]);
     }
   }
+  TCanvas * canv = new TCanvas("c1","c1",600,600);
+  graph->Draw("a*");
+  //TFile * out_file;
+  //out_file = new TFile(out_filename,"RECREATE");
+  //graph->Write();
+  //out_file->Close();
+  app.Run();
   return 0;
 }
 
@@ -77,15 +95,17 @@ const void Usage(char * argv[]){
   cerr << "-c :option c" << endl;
   cerr << "-i :input filename" << endl;
   cerr << "-t :input TTree name" << endl;
+  cerr << "-o :output filename" << endl;
+  cerr << "-e :event number" << endl;
   exit(-1);
 }
 
-const void GetOptions(int argc, char * argv[], char ** opt1, char ** opt2){
+const void GetOptions(int argc, char * argv[], char ** opt1, char ** opt2, char ** opt3, char ** opt4){
   if (1 == argc){
     Usage(argv);
   }
   int result; 
-  while((result=getopt(argc,argv,"abcdi:t:"))!=-1){
+  while((result=getopt(argc,argv,"abcdi:t:o:e:"))!=-1){
     switch(result){
     case 'a':
       Usage(argv);
@@ -100,10 +120,20 @@ const void GetOptions(int argc, char * argv[], char ** opt1, char ** opt2){
       Usage(argv);
       break;
     case 'i':
-      opt1 = &optarg;
+      std::cout << optarg << std::endl;
+      *opt1 = optarg;
       break;
     case 't':
-      opt2 = &optarg;
+      std::cout << optarg << std::endl;
+      *opt2 = optarg;
+      break;
+    case 'o':
+      std::cout << optarg << std::endl;
+      *opt3 = optarg;
+      break;
+    case 'e':
+      std::cout << optarg << std::endl;
+      *opt4 = optarg;
       break;
     default:
       Usage(argv);

@@ -23,7 +23,7 @@
 // declear functions
 //////////////////////////////
 const void Usage(char * argv[]);
-const void GetOptions(int argc, char * argv[], char ** opt1, char ** opt2, char ** opt3,char ** opt4);
+const void GetOptions(int argc, char * argv[], char ** opt1, char ** opt2, char ** opt3,char ** opt4,char ** opt5, char ** opt6);
 
 //////////////////////////////
 // main
@@ -36,10 +36,12 @@ int main(int argc, char * argv[]){
   char * in_treename;
   char * out_filename;
   char * eve_num;
+  //char * begin_cell;
+  //char * cell_length;
   //////////////////////////////
   // get options
   //////////////////////////////
-  GetOptions(app.Argc(),app.Argv(),&in_filename,&in_treename,&out_filename,&eve_num);
+  GetOptions(app.Argc(),app.Argv(),&in_filename,&in_treename,&out_filename,&eve_num,&begin_cell,&cell_length);
   //////////////////////////////
   // open TFile
   //////////////////////////////
@@ -64,7 +66,7 @@ int main(int argc, char * argv[]){
   TGraph * graph = new TGraph();
   TCanvas * canv = new TCanvas("c1","c1",600,600);
   int dummy;
-  graph->Draw("a*l");
+  graph->Draw("a");
 
   //////////////////////////////
   // test loop
@@ -73,19 +75,23 @@ int main(int argc, char * argv[]){
   const int kNumEvent = in_tree->GetEntries();
   for(int  i_event = 0;i_event<kNumEvent;i_event++){
     in_tree->GetEntry(i_event);
-    for(int i_cell = 0;i_cell<kNumCell;i_cell++){
+    int count=0;
+    for(int i_cell =0;i_cell<1024;i_cell++){
       //int num_p = graph->GetN();
       graph->RemovePoint(i_cell);
       graph->SetPoint(i_cell,time[i_cell],wform1[i_cell]-wform0[i_cell]);
+      cout << time[i_cell] << endl;
+      count++;
     }
-    graph->GetXaxis()->SetLimits(0,1000);
+    //    graph->GetXaxis()->SetLimits(atoi(begin_cell),atoi(begin_cell)+atoi(cell_length));
     graph->SetMaximum(100);
     graph->SetMinimum(-50);
     //graph->Draw("a*");
     canv->Update();
     canv->Modified();
     graph->Clear();
-    sleep(1/30.0);
+    getchar();
+    //sleep(1);
   }
 
 
@@ -105,26 +111,24 @@ const void Usage(char * argv[]){
   cerr << "Usage: " << argv[0] << " <OPTION> " << "<ARGUMENT>" << endl;
   cerr << "-----Options-----" << endl;
   cerr << "-a :option a" << endl;
-  cerr << "-b :option b" << endl;
   cerr << "-c :option c" << endl;
   cerr << "-i :input filename" << endl;
   cerr << "-t :input TTree name" << endl;
   cerr << "-o :output filename" << endl;
   cerr << "-e :event number" << endl;
+  cerr << "-b :begin cell" << endl;
+  cerr << "-l :cell length" << endl;
   exit(-1);
 }
 
-const void GetOptions(int argc, char * argv[], char ** opt1, char ** opt2, char ** opt3, char ** opt4){
+const void GetOptions(int argc, char * argv[], char ** opt1, char ** opt2, char ** opt3, char ** opt4, char ** opt5, char ** opt6){
   if (1 == argc){
     Usage(argv);
   }
   int result; 
-  while((result=getopt(argc,argv,"abcdi:t:o:e:"))!=-1){
+  while((result=getopt(argc,argv,"acdi:t:o:e:b:l:"))!=-1){
     switch(result){
     case 'a':
-      Usage(argv);
-      break;
-    case 'b':
       Usage(argv);
       break;
     case 'c':
@@ -148,6 +152,14 @@ const void GetOptions(int argc, char * argv[], char ** opt1, char ** opt2, char 
     case 'e':
       std::cout << optarg << std::endl;
       *opt4 = optarg;
+      break;
+    case 'b':
+      std::cout << optarg << std::endl;
+      *opt5 = optarg;
+      break;
+    case 'l':
+      std::cout << optarg << std::endl;
+      *opt6 = optarg;
       break;
     default:
       Usage(argv);
